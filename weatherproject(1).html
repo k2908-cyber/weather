@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakura Weather App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === STYLE.CSS START === */
+        
+        /* Base Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* YOU MUST REPLACE this URL with an actual cherry blossom image link! */
+            background-image: url('https://4kwallpapers.com/images/walls/thumbs_3t/3300.jpg'); 
+            background-size: cover;
+            background-position: center;
+            color: #333; /* Default text color */
+        }
+
+        /* Container for the App */
+        .weather-container {
+            background: rgba(255, 255, 255, 0.85); /* Semi-transparent white card */
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            backdrop-filter: blur(5px); /* Add a subtle blur effect */
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Light border */
+        }
+
+        h1 {
+            color: #e91e63; /* Pink color for a sakura theme */
+            margin-bottom: 25px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* Search Box Styling */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #city-input {
+            padding: 12px;
+            flex-grow: 1;
+            border: 2px solid #ff4081; /* Accent pink border */
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #city-input:focus {
+            border-color: #d81b60;
+        }
+
+        #search-btn {
+            padding: 12px 20px;
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        #search-btn:hover {
+            background-color: #d81b60;
+        }
+
+        #search-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Weather Result Styling */
+        .weather-result {
+            padding: 20px;
+            border: 1px dashed #ff80ab; /* Dashed pink border */
+            border-radius: 10px;
+            background-color: rgba(255, 240, 245, 0.7); /* Very light pink background */
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .weather-result h2 {
+            color: #4a148c; /* Purple for contrast */
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .weather-result img {
+            width: 64px;
+            height: 64px;
+            margin: 10px 0;
+        }
+
+        .temp {
+            font-size: 3em;
+            font-weight: 700;
+            color: #e91e63;
+            margin: 5px 0;
+        }
+
+        .condition, .details p {
+            font-size: 1.1em;
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ffcdd2;
+        }
+
+        .details p {
+            flex: 1;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        /* Error Message Styling */
+        .error-message {
+            color: #d32f2f;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        /* === STYLE.CSS END === */
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <h1>Sakura Weather Forecast</h1>
+        
+        <div class="search-box">
+            <input type="text" id="city-input" placeholder="Enter city name (e.g., Tokyo)">
+            <button id="search-btn">Get Weather</button>
+        </div>
+
+        <div id="weather-result" class="weather-result">
+            <p>Enter a city and click 'Get Weather' to see the forecast.</p>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script>
+        /* === SCRIPT.JS START === */
+
+        document.getElementById('search-btn').addEventListener('click', fetchWeather);
+
+        // Allow searching by pressing 'Enter' key
+        document.getElementById('city-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                fetchWeather();
+            }
+        });
+
+        function fetchWeather() {
+            // 1. Get the API Key and Base URL
+            const apiKey = 'b5d74f498ba047fdbc5122203252311'; 
+            const baseUrl = 'https://api.weatherapi.com/v1/current.json';
+
+            // 2. Get the City Input
+            const cityInput = document.getElementById('city-input').value.trim();
+            const resultDiv = document.getElementById('weather-result');
+            const errorDiv = document.getElementById('error-message');
+
+            // Clear previous results and errors
+            resultDiv.innerHTML = '<p>Fetching weather data...</p>';
+            errorDiv.textContent = ''; 
+
+            // Basic validation
+            if (cityInput === '') {
+                errorDiv.textContent = 'Please enter a city name.';
+                resultDiv.innerHTML = '<p>Enter a city and click \'Get Weather\' to see the forecast.</p>';
+                return;
+            }
+
+            // 3. Construct the full API URL
+            const apiUrl = `${baseUrl}?key=${apiKey}&q=${encodeURIComponent(cityInput)}&aqi=yes`;
+
+            // 4. Make the API request
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        // Throw an error if the status is not 200 (e.g., 400 Bad Request or 404 Not Found)
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 5. Handle successful data
+                    displayWeather(data);
+                })
+                .catch(error => {
+                    // 6. Handle API call or network errors
+                    console.error('Fetch error:', error);
+                    errorDiv.textContent = 'Could not retrieve weather data. Please check the city name and try again.';
+                    resultDiv.innerHTML = '<p>Enter a city and click \'Get Weather\' to see the forecast.</p>';
+                });
+        }
+
+        function displayWeather(data) {
+            const resultDiv = document.getElementById('weather-result');
+            
+            // Extract key information
+            const location = data.location;
+            const current = data.current;
+            
+            // Get the icon URL from the API data, ensuring the protocol is correct
+            const iconUrl = current.condition.icon ? `https:${current.condition.icon}` : '';
+
+            // Create the HTML content to display
+            resultDiv.innerHTML = `
+                <h2>${location.name}, ${location.country}</h2>
+                ${iconUrl ? `<img src="${iconUrl}" alt="${current.condition.text}">` : ''}
+                <div class="temp">${current.temp_c}°C</div>
+                <div class="condition">${current.condition.text}</div>
+                
+                <div class="details">
+                    <p><strong>Humidity:</strong> ${current.humidity}%</p>
+                    <p><strong>Wind:</strong> ${current.wind_kph} kph</p>
+                    <p><strong>Feels Like:</strong> ${current.feelslike_c}°C</p>
+                </div>
+                <p style="font-size: 0.8em; color: #888; margin-top: 15px;">Last updated: ${new Date(location.localtime).toLocaleTimeString()}</p>
+            `;
+        }
+
+        /* === SCRIPT.JS END === */
+    </script>
+</body>
+</html>
